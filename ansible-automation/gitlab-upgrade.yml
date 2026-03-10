@@ -1,5 +1,6 @@
 ---
 - name: Upgrade GitLab with Geo settings
+  become_user: root
   hosts: "{{env}}"
   vars:
     upgrade_version: ""
