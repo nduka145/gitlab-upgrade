@@ -3,7 +3,7 @@
   hosts: "{{env}}"
   vars:
     upgrade_version: ""
-    rpm_package: "https://packages.gitlab.com/gitlab/gitlab-ee/packages/ol/8/gitlab-ee-{{ upgrade_version }}-ee.0.el8.x86_64.rpm/download.rpm"
+    rpm_package: "https://packages.gitlab.com/gitlab/gitlab-ee/packages/ol/8/gitlab-ee-{{ upgrade_version }}-ee.0.el9.x86_64.rpm/download.rpm"
     rpm_filename: "gitlab-ee-{{ upgrade_version }}-ee.0.el9.x86_64.rpm"
     rpm_path: "/tmp/{{ rpm_filename }}"
     backup_dir: "/root/govinfo"
