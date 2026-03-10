@@ -1,0 +1,61 @@
+---
+- name: Upgrade GitLab with Geo settings
+  hosts: "{{env}}"
+  vars:
+    upgrade_version: ""
+    rpm_package: "https://packages.gitlab.com/gitlab/gitlab-ee/packages/ol/8/gitlab-ee-{{ upgrade_version }}-ee.0.el8.x86_64.rpm/download.rpm"
+    rpm_filename: "gitlab-ee-{{ upgrade_version }}-ee.0.el8.x86_64.rpm"
+    rpm_path: "/tmp/{{ rpm_filename }}"
+    backup_dir: "/root/govinfo"
+    backup_tar: "/etc/gitlab/config_backup"
+
+  tasks:
+    - block:
+        - name: Create versioned backup directory
+          ansible.builtin.file:
+            path: "{{ backup_dir }}/{{ upgrade_version }}"
+            state: directory
+            mode: '0755'
+
+        - name: Backup GitLab configuration
+          ansible.builtin.command: gitlab-ctl backup-etc
+          register: backup_etc
+
+        - name: Setting host facts using complex arguments
+          ansible.builtin.set_fact:
+            config_backup: "{{ backup_etc.stdout_lines[1] | regex_replace('.*: (.*)', '\\1') }}"
+
+        - name: Copy backup tar to versioned directory
+          ansible.builtin.copy:
+            src: "{{ backup_tar }}/{{ config_backup }}"
+            dest: "{{ backup_dir }}/{{ upgrade_version }}"
+            remote_src: yes
+
+        - name: Take gitlab backup
+          ansible.builtin.command: gitlab-backup create
+
+        - name: Download gitlab package
+          ansible.builtin.shell: "wget --content-disposition -P /tmp {{ rpm_package }}"
+
+        - name: Install GitLab RPM
+          ansible.builtin.shell: "yum install {{ rpm_path }} -y"
+
+        - name: Pause for 2 minutes to start the gitlab services
+          ansible.builtin.pause:
+            minutes: 1
+
+        - name: Run gitlab-ctl reconfigure
+          ansible.builtin.command: gitlab-ctl reconfigure
+
+        - name: Run database migration only on Primary
+          ansible.builtin.command: gitlab-rake db:migrate
+
+        - name: HUP Puma process
+          ansible.builtin.command: gitlab-ctl hup puma
+
+        - name: Restart Sidekiq
+          ansible.builtin.command: gitlab-ctl restart sidekiq
+
+        - name: Restart GitLab
+          ansible.builtin.command: gitlab-ctl restart
+
