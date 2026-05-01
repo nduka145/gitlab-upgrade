@@ -44,15 +44,6 @@
         - name: Run gitlab-ctl reconfigure
           ansible.builtin.command: gitlab-ctl reconfigure
 
-        - name: Run database migration only on Primary
-          ansible.builtin.command: gitlab-rake db:migrate
-
-        - name: HUP Puma process
-          ansible.builtin.command: gitlab-ctl hup puma
-
-        - name: Restart Sidekiq
-          ansible.builtin.command: gitlab-ctl restart sidekiq
-
         - name: Restart GitLab
           ansible.builtin.command: gitlab-ctl restart
 
