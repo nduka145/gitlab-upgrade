@@ -16,15 +16,11 @@
           ansible.builtin.shell: "cat /opt/gitlab/version-manifest.txt | grep gitlab-ee | awk '{print $2}'"
           register: current_version
 
-        - name: Set current GitLab version fact
-          ansible.builtin.set_fact:
-            gitlab_current_version: "{{ current_version.stdout }}"
-
         - name: Create Config-backup directory
           ansible.builtin.file:
-            path: "{{ backup_dir }}/{{ gitlab_current_version }}"
+            path: "{{ backup_dir }}/{{ current_version.stdout }}"
             state: directory
             mode: '0755'
 
         - name: Backup GitLab configuration
-          ansible.builtin.shell: "gitlab-ctl backup-etc --backup-path {{ backup_dir }}/{{ gitlab_current_version }}"
+          ansible.builtin.shell: "gitlab-ctl backup-etc --backup-path {{ backup_dir }}/{{ current_version.stdout }}"
