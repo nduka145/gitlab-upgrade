@@ -27,4 +27,4 @@
             mode: '0755'
 
         - name: Backup GitLab configuration
-          ansible.builtin.shell: "gitlab-ctl backup-etc --backup-path /root/govinfo/{{ gitlab_current_version }}"
+          ansible.builtin.shell: "gitlab-ctl backup-etc --backup-path {{ backup_dir }}/{{ gitlab_current_version }}"
