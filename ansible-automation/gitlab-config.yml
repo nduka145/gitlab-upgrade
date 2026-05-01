@@ -1,0 +1,17 @@
+---
+- name: Upgrade GitLab with Geo settings
+  remote_user: root
+  hosts: "{{env}}"
+  vars:
+    upgrade_version: ""
+    rpm_package: "http://192.168.1.180:8081/repository/gitlab-packages/gitlab-ee-{{ upgrade_version }}-ee.0.el9.x86_64.rpm"
+    rpm_filename: "gitlab-ee-{{ upgrade_version }}-ee.0.el9.x86_64.rpm"
+    rpm_path: "/tmp/{{ rpm_filename }}"
+    backup_dir: "/root/govinfo"
+    backup_tar: "/etc/gitlab/config_backup"
+
+  tasks:
+    - block:
+        - name: Get current gitlab version
+          ansible.builtin.shell: "cat /opt/gitlab/version-manifest.txt | grep gitlab-ee | awk '{print $2}'"
+          register: current_version
