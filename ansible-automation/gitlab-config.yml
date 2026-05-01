@@ -20,6 +20,11 @@
           ansible.builtin.set_fact:
             gitlab_current_version: "{{ current_version.stdout }}"
 
-        - name: Debug GitLab version fact
-          ansible.builtin.debug:
-            var: gitlab_current_version
+        - name: Create Config-backup directory
+          ansible.builtin.file:
+            path: "{{ backup_dir }}/{{ gitlab_current_version }}"
+            state: directory
+            mode: '0755
+
+        - name: Backup GitLab configuration
+          ansible.builtin.shell: "gitlab-ctl backup-etc --backup-path /root/govinfo/{{ gitlab_current_version }}"
