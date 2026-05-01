@@ -15,3 +15,7 @@
         - name: Get current gitlab version
           ansible.builtin.shell: "cat /opt/gitlab/version-manifest.txt | grep gitlab-ee | awk '{print $2}'"
           register: current_version
+
+        - name: Set current GitLab version fact
+          ansible.builtin.set_fact:
+            gitlab_current_version: "{{ current_version.stdout }}"
