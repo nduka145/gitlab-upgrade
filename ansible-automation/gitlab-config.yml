@@ -19,3 +19,7 @@
         - name: Set current GitLab version fact
           ansible.builtin.set_fact:
             gitlab_current_version: "{{ current_version.stdout }}"
+
+        - name: Debug GitLab version fact
+          ansible.builtin.debug:
+            var: gitlab_current_version
