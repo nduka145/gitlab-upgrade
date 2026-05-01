@@ -11,26 +11,22 @@
     backup_tar: "/etc/gitlab/config_backup"
 
   tasks:
-    - block:
-        - name: Create versioned backup directory
+        - name: Get current gitlab version
+          ansible.builtin.shell: "cat /opt/gitlab/version-manifest.txt | grep gitlab-ee | awk '{print $2}'"
+          register: current_version
+
+        - name: Set current GitLab version fact
+          ansible.builtin.set_fact:
+            gitlab_current_version: "{{ current_version.stdout }}"
+
+        - name: Create Config-backup directory
           ansible.builtin.file:
-            path: "{{ backup_dir }}/{{ upgrade_version }}"
+            path: "{{ backup_dir }}/{{ gitlab_current_version }}"
             state: directory
             mode: '0755'
 
         - name: Backup GitLab configuration
-          ansible.builtin.command: gitlab-ctl backup-etc
-          register: backup_etc
-
-        - name: Setting host facts using complex arguments
-          ansible.builtin.set_fact:
-            config_backup: "{{ backup_etc.stdout_lines[1] | regex_replace('.*: (.*)', '\\1') }}"
-
-        - name: Copy backup tar to versioned directory
-          ansible.builtin.copy:
-            src: "{{ backup_tar }}/{{ config_backup }}"
-            dest: "{{ backup_dir }}/{{ upgrade_version }}"
-            remote_src: yes
+          ansible.builtin.shell: "gitlab-ctl backup-etc --backup-path /root/govinfo/{{ gitlab_current_version }}"
 
         - name: Take gitlab backup
           ansible.builtin.command: gitlab-backup create
