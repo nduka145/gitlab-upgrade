@@ -1,6 +1,7 @@
 ---
 - name: Restore GitLab from backup
-  hosts: dev
+  remote_user: root
+  hosts: "{{env}}"
   gather_facts: true
 
   vars:
