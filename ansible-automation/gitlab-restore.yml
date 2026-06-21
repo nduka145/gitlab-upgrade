@@ -28,6 +28,22 @@
 
     - name: Stop GitLab Puma
       ansible.builtin.command: gitlab-ctl stop puma
+      register: stop_puma
+      failed_when: false
+      changed_when: true
+    
+    - name: Wait for Puma to stop
+      ansible.builtin.command: gitlab-ctl status puma
+      register: puma_status
+      retries: 12
+      delay: 10
+      until: "'down: puma' in puma_status.stdout"
+      failed_when: false
+      changed_when: false
+    
+    - name: Force stop Puma if still running
+      ansible.builtin.command: gitlab-ctl kill puma
+      when: "'down: puma' not in puma_status.stdout"
 
     - name: Stop GitLab Sidekiq
       ansible.builtin.command: gitlab-ctl stop sidekiq
