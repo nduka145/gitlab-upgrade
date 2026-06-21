@@ -1,0 +1,51 @@
+---
+- name: Restore GitLab from backup
+  hosts: gitlab
+  gather_facts: true
+
+  vars:
+    backup_file: ""
+    backup_id: ""
+    prod_backup_path: "/build/data/gitlab-backups-prod"
+    restore_backup_path: "/build/data/gitlab-backups"
+    tar_version: "tar-1.34-7.el9"
+
+  tasks:
+    - name: Downgrade tar
+      ansible.builtin.dnf:
+        name: "{{ tar_version }}"
+        state: present
+        allow_downgrade: true
+
+    - name: Copy GitLab backup into restore directory as git user
+      become: true
+      become_user: git
+      ansible.builtin.copy:
+        src: "{{ prod_backup_path }}/{{ backup_file }}"
+        dest: "{{ restore_backup_path }}/{{ backup_file }}"
+        remote_src: true
+
+    - name: Stop GitLab Puma
+      ansible.builtin.command: gitlab-ctl stop puma
+
+    - name: Stop GitLab Sidekiq
+      ansible.builtin.command: gitlab-ctl stop sidekiq
+
+    - name: Restore GitLab backup
+      ansible.builtin.expect:
+        command: "gitlab-backup restore BACKUP={{ backup_id }}"
+        responses:
+          'Do you want to continue \(yes/no\)\?': 'yes'
+          'yes/no': 'yes'
+        timeout: 3600
+      register: restore_result
+
+    - name: Show restore output
+      ansible.builtin.debug:
+        var: restore_result.stdout_lines
+
+    - name: Reconfigure GitLab
+      ansible.builtin.command: gitlab-ctl reconfigure
+
+    - name: Restart GitLab
+      ansible.builtin.command: gitlab-ctl restart
