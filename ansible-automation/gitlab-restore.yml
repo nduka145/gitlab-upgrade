@@ -1,6 +1,6 @@
 ---
 - name: Restore GitLab from backup
-  hosts: gitlab
+  hosts: dev
   gather_facts: true
 
   vars:
