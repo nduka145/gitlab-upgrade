@@ -47,6 +47,22 @@
 
     - name: Stop GitLab Sidekiq
       ansible.builtin.command: gitlab-ctl stop sidekiq
+      register: stop_sidekiq
+      failed_when: false
+      changed_when: true
+    
+    - name: Wait for Sidekiq to stop
+      ansible.builtin.command: gitlab-ctl status sidekiq
+      register: sidekiq_status
+      retries: 12
+      delay: 10
+      until: "'down: sidekiq' in sidekiq_status.stdout"
+      failed_when: false
+      changed_when: false
+    
+    - name: Force stop Sidekiq if still running
+      ansible.builtin.command: gitlab-ctl kill sidekiq
+      when: "'down: sidekiq' not in sidekiq_status.stdout"
 
     - name: Restore GitLab backup
       ansible.builtin.expect:
